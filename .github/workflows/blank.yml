@@ -1,0 +1,38 @@
+name: VPS with Web Terminal
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Install Tools
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y wget unzip curl jq git htop
+
+      - name: Install ttyd (Web Terminal)
+        run: |
+          wget https://github.com/tsl0922/ttyd/releases/download/1.7.7/ttyd.x86_64
+          chmod +x ttyd.x86_64
+          sudo mv ttyd.x86_64 /usr/local/bin/ttyd
+
+      - name: Start Web Terminal
+        run: |
+          ./ttyd -p 8080 bash > /dev/null 2>&1 &
+          sleep 5
+          echo "===================================="
+          echo "🌐 Web Terminal Started!"
+          echo "Use this URL to open terminal in browser:"
+          curl -s http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url' || echo "Tunnel setup needed"
+          echo "===================================="
+
+      - name: Keep Alive 6 hours
+        run: |
+          echo "Keeping VPS alive for 6 hours..."
+          sleep 21600
